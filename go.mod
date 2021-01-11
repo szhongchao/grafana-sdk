@@ -1,4 +1,4 @@
-module github.com/huangjiuyuan/grafana-sdk
+module github.com/szhongchao/grafana-sdk
 
 go 1.12
 
