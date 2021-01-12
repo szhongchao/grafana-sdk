@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -179,7 +180,7 @@ func (r *Client) SetDashboardWithFolderName(board Board, overwrite bool, folderN
 	folderId := FolderMap[folderName]
 	if folderId < 1 {
 		folders, err := r.GetFolders()
-		if err != nil {
+		if err == nil {
 			for _, folder := range folders {
 				FolderMap[folder.Title] = folder.ID
 			}
