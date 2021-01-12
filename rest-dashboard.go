@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-var FolderMap map[string]int
+var FolderMap = make(map[string]int)
 
 // BoardProperties keeps metadata of a dashboard.
 type BoardProperties struct {
@@ -176,8 +176,8 @@ func (r *Client) SetDashboard(board Board, overwrite bool) (StatusMessage, error
 }
 
 func (r *Client) SetDashboardWithFolderName(board Board, overwrite bool, folderName string) (StatusMessage, error) {
-	folderId := FolderMap[folderName]
-	if folderId < 1 {
+	folderId, ok := FolderMap[folderName]
+	if !ok {
 		folders, err := r.GetFolders()
 		if err == nil {
 			for _, folder := range folders {
