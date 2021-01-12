@@ -28,6 +28,8 @@ import (
 	"time"
 )
 
+var FolderMap map[string]int
+
 // BoardProperties keeps metadata of a dashboard.
 type BoardProperties struct {
 	IsStarred  bool      `json:"isStarred,omitempty"`
@@ -173,6 +175,41 @@ func (r *Client) SetDashboard(board Board, overwrite bool) (StatusMessage, error
 	return r.SetDashboardWithFolderId(board, overwrite, -1)
 }
 
+func (r *Client) SetDashboardWithFolderName(board Board, overwrite bool, folderName string) (StatusMessage, error) {
+	folderId := FolderMap[folderName]
+	if folderId < 1 {
+		folders, err := r.GetFolders()
+		if err != nil {
+			for _, folder := range folders {
+				FolderMap[folder.Title] = folder.ID
+			}
+			folderId = FolderMap[folderName]
+		}
+	}
+	return r.SetDashboardWithFolderId(board, overwrite, folderId)
+}
+
+func (r *Client) GetFolders() ([]Folder, error) {
+	var (
+		raw    []byte
+		folder []Folder
+		code   int
+		err    error
+	)
+	if raw, code, err = r.get(fmt.Sprintf("/api/folders"), nil); err != nil {
+		return []Folder{}, err
+	}
+	if code != 200 {
+		return []Folder{}, fmt.Errorf("HTTP error %d: returns %s", code, raw)
+	}
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	if err := dec.Decode(&folder); err != nil {
+		return []Folder{}, fmt.Errorf("unmarshal folder  with meta: %s\n%s", err, raw)
+	}
+	return folder, err
+}
+
 func (r *Client) SetDashboardWithFolderId(board Board, overwrite bool, folderId int) (StatusMessage, error) {
 	var (
 		isBoardFromDB bool
@@ -190,7 +227,7 @@ func (r *Client) SetDashboardWithFolderId(board Board, overwrite bool, folderId 
 		return StatusMessage{}, errors.New("only database dashboard (with 'db/' prefix in a slug) can be set")
 	}
 	newBoard.Dashboard = board
-	if folderId > -1 {
+	if folderId > 0 {
 		newBoard.FolderId = folderId
 	}
 	newBoard.Overwrite = overwrite
@@ -306,6 +343,11 @@ type Permission struct {
 	Slug           string    `json:"slug,omitempty"`
 	IsFolder       bool      `json:"isFolder,omitempty"`
 	URL            string    `json:"url,omitempty"`
+}
+
+type Folder struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
 }
 
 // Permissions keeps list of all permissions for a dashboard.
