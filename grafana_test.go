@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/huangjiuyuan/grafana-sdk"
+	sdk "github.com/szhongchao/grafana-sdk"
 )
 
 func ExampleNewBoard() {
